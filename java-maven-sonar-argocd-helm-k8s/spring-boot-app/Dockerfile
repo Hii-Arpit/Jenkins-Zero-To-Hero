@@ -2,13 +2,10 @@
 FROM maven:3.8.6-openjdk-11 AS build
 WORKDIR /app
 
-# Copy only pom.xml first to leverage Docker caching
-COPY pom.xml .
+# Copy everything from the correct location
+COPY . .
 
-# Copy the source code
-COPY src ./src
-
-# Verify that the files are copied correctly
+# Debugging step: List files in /app to verify pom.xml is present
 RUN ls -ltr /app
 
 # Build the application, skipping tests for faster build
