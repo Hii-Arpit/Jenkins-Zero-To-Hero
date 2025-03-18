@@ -2,8 +2,14 @@
 FROM maven:3.8.6-openjdk-11 AS build
 WORKDIR /app
 
-# Copy the project files
-COPY . .
+# Copy only pom.xml first to leverage Docker caching
+COPY pom.xml .
+
+# Copy the source code
+COPY src ./src
+
+# Verify that the files are copied correctly
+RUN ls -ltr /app
 
 # Build the application, skipping tests for faster build
 RUN mvn clean package -DskipTests
@@ -13,7 +19,7 @@ FROM openjdk:11-jdk-slim
 WORKDIR /app
 
 # Copy only the built JAR from the previous stage
-COPY --from=build /app/target/spring-boot-web.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Expose the application port
 EXPOSE 8080
