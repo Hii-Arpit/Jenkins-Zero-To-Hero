@@ -1,13 +1,22 @@
-# You can change this base image to anything else
-# But make sure to use the correct version of Java
-FROM adoptopenjdk/openjdk11:alpine-jre
+# Build Stage: Use Maven to build the JAR file
+FROM maven:3.8.6-openjdk-11 AS build
+WORKDIR /app
 
-# Simply the artifact path
-ARG artifact=target/spring-boot-web.jar
+# Copy the project files
+COPY . .
 
-WORKDIR /opt/app
+# Build the application, skipping tests for faster build
+RUN mvn clean package -DskipTests
 
-COPY ${artifact} app.jar
+# Run Stage: Use a minimal Java image for production
+FROM openjdk:11-jdk-slim
+WORKDIR /app
 
-# This should not be changed
-ENTRYPOINT ["java","-jar","app.jar"]
+# Copy only the built JAR from the previous stage
+COPY --from=build /app/target/spring-boot-web.jar app.jar
+
+# Expose the application port
+EXPOSE 8080
+
+# Run the Spring Boot application
+CMD ["java", "-jar", "app.jar"]
